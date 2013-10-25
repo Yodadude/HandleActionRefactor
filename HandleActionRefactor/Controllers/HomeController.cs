@@ -32,9 +32,9 @@ namespace HandleActionRefactor.Controllers
         {
             return Handle(inputModel)
                 .Returning<HomeResponseModel>()
-                //.On(x => x.GotoAbout, _ => RedirectToAction("About"))
-                .OnSuccess(_ => RedirectToAction("Index"));
-            //.OnError(_ => Index());
+                .On(x => x.GotoAbout, _ => RedirectToAction("About"))
+                .OnSuccess(_ => RedirectToAction("Index"))
+                .OnError(_ => Index());
         }
 
         public ActionResult About()

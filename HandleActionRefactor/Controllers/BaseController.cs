@@ -37,20 +37,22 @@ namespace HandleActionRefactor.Controllers
         }
     }
 
-    public class HandleActionResult<T, TRet> : ActionResult
+    public class HandleActionResult<T, TRet> : ActionResult where TRet : new()
     {
 
         private readonly T _model;
+        public TRet _response;
         private IInvoker _invoker;
         private Func<T, ActionResult> _success;
         private Func<T, ActionResult> _error;
-        private Dictionary<Func<TRet, bool>, Func<T, ActionResult>> _actions; 
+        private readonly List<OnPredicate> _actions; 
 
         public HandleActionResult(T model, IInvoker invoker)
         {
             _model = model;
             _invoker = invoker;
-            _actions = new Dictionary<Func<TRet, bool>, Func<T, ActionResult>>();
+            _actions = new List<OnPredicate>();
+            _response = new TRet();
         }
 
         public HandleActionResult<T, TRet> OnSuccess(Func<T, ActionResult> func)
@@ -65,24 +67,35 @@ namespace HandleActionRefactor.Controllers
             return this;
         }
 
-        public HandleActionResult<T, TRet> On(Func<TRet, bool> func1, Func<T, ActionResult> func2)
+        public HandleActionResult<T, TRet> On(Func<TRet, bool> f1, Func<T, ActionResult> f2)
         {
-            _actions.Add(func1, func2);
+            _actions.Add(new OnPredicate { func1 = f1, func2 = f2 });
             return this;
         }
 
         public override void ExecuteResult(ControllerContext context)
         {
-            _invoker.Execute<TRet>(_model);
+            _response = _invoker.Execute<TRet>(_model);
 
-            //if (_error != null)
-            //    _error(_model);
-            //else if (_actions.Count > 0)
-            //{
-                
-            //}
-            //else if (_success != null)
+            if (_error != null)
+                _error(_model);
+            else if (_actions.Count > 0)
+            {
+                foreach (var onPredicate in _actions)
+                {
+                    if (onPredicate.func1(_response))
+                        onPredicate.func2(_model).ExecuteResult(context);
+                }
+
+            }
+            else if (_success != null)
             _success(_model).ExecuteResult(context);
+        }
+
+        private class OnPredicate
+        {
+            public Func<TRet, bool> func1;
+            public Func<T, ActionResult> func2;
         }
     }
 
