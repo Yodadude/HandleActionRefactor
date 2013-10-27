@@ -26,7 +26,7 @@ namespace HandleActionRefactor.Controllers
             _invoker = invoker;
         }
 
-        public ActionResult Returning<TRet>()
+        public HandleActionResult<T, TRet> Returning<TRet>()
         {
             return new HandleActionResult<T, TRet>(_model, _invoker);
         }
@@ -68,7 +68,7 @@ namespace HandleActionRefactor.Controllers
 
         public HandleActionResult<T, TRet> On(Func<TRet, bool> f1, Func<T, ActionResult> f2)
         {
-            _actions.Add(new OnPredicate { func1 = f1, func2 = f2 });
+            _actions.Add(new OnPredicate { Func1 = f1, Func2 = f2 });
             return this;
         }
 
@@ -82,8 +82,8 @@ namespace HandleActionRefactor.Controllers
             {
                 foreach (var onPredicate in _actions)
                 {
-                    if (onPredicate.func1(_response))
-                        onPredicate.func2(_model).ExecuteResult(context);
+                    if (onPredicate.Func1(_response))
+                        onPredicate.Func2(_model).ExecuteResult(context);
                 }
 
             }
@@ -93,8 +93,8 @@ namespace HandleActionRefactor.Controllers
 
         private class OnPredicate
         {
-            public Func<TRet, bool> func1;
-            public Func<T, ActionResult> func2;
+            public Func<TRet, bool> Func1;
+            public Func<T, ActionResult> Func2;
         }
     }
 
