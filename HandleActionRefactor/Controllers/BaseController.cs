@@ -26,7 +26,7 @@ namespace HandleActionRefactor.Controllers
             _invoker = invoker;
         }
 
-        public HandleActionResult<T, TRet> Returning<TRet>()
+        public ActionResult Returning<TRet>()
         {
             return new HandleActionResult<T, TRet>(_model, _invoker);
         }
@@ -37,11 +37,11 @@ namespace HandleActionRefactor.Controllers
         }
     }
 
-    public class HandleActionResult<T, TRet> : ActionResult where TRet : new()
+    public class HandleActionResult<T, TRet> : ActionResult
     {
 
+        public TRet _response { get; set; }
         private readonly T _model;
-        public TRet _response;
         private IInvoker _invoker;
         private Func<T, ActionResult> _success;
         private Func<T, ActionResult> _error;
@@ -52,7 +52,6 @@ namespace HandleActionRefactor.Controllers
             _model = model;
             _invoker = invoker;
             _actions = new List<OnPredicate>();
-            _response = new TRet();
         }
 
         public HandleActionResult<T, TRet> OnSuccess(Func<T, ActionResult> func)
