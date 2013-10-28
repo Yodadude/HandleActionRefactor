@@ -2,6 +2,7 @@
 using System.Web.Mvc;
 using SchoStack.Web;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HandleActionRefactor.Controllers
 {
@@ -68,11 +69,11 @@ namespace HandleActionRefactor.Controllers
 
         public HandleActionResult<T, TRet> On(Func<TRet, bool> f1, Func<TRet, ActionResult> f2)
         {
-            _actions.Add(new OnPredicate { Func1 = f1, Func2 = f2 });
+            _actions.Add(new OnPredicate { On = f1, Do = f2 });
             return this;
         }
 
-        public override void ExecuteResult(ControllerContext context)
+        new private void ExecuteResult(ControllerContext context)
         {
             _response = _invoker.Execute<TRet>(_model);
 
@@ -83,22 +84,24 @@ namespace HandleActionRefactor.Controllers
             }
             else
             {
+                var action = _actions.Single(x => x.On(_response));
+
+                if (action != null)
+                {
+                    action.Do(_response);
+                    return;
+                }
+
                 if (_success != null)
                     _success(_model).ExecuteResult(context);
-
-                foreach (var onPredicate in _actions)
-                {
-                    if (onPredicate.Func1(_response))
-                        onPredicate.Func2(_response).ExecuteResult(context);
-                }
             }
 
         }
 
         private class OnPredicate
         {
-            public Func<TRet, bool> Func1;
-            public Func<TRet, ActionResult> Func2;
+            public Func<TRet, bool> On;
+            public Func<TRet, ActionResult> Do;
         }
     }
 
