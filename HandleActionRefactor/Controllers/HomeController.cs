@@ -27,16 +27,53 @@ namespace HandleActionRefactor.Controllers
         //    return RedirectToAction("Index");
         //}
 
+        //[HttpPost]
+        //public ActionResult Index(HomeInputModel inputModel)
+        //{
+
+        //    return Handle(inputModel)
+        //        .Returning<HomeResponseModel>()
+        //        .On(x => x.GotoAbout, _ => RedirectToAction("About"))
+        //        .OnSuccess(_ => RedirectToAction("Index"))
+        //        .OnError(_ => Index());
+        //}
+
+
+        //[HttpPost]
+        //public ActionResult Index(HomeInputModel inputModel)
+        //{
+
+        //    //if (!ModelState.IsValid)
+        //    //    return Index();
+
+        //    //Invoker.Execute(inputModel);
+
+        //    //return RedirectToAction("ABout");
+
+        //    return Handle(inputModel)
+        //        .OnError(() => Index())
+        //        .OnSuccess(() => RedirectToAction("About"));
+
+        //}
+
         [HttpPost]
         public ActionResult Index(HomeInputModel inputModel)
         {
+            //if (!ModelState.IsValid)
+            //    return Index();
+
+            //var response = Invoker.Execute<HomeResponseModel>(inputModel);
+
+            //return RedirectToAction("ABout");
 
             return Handle(inputModel)
+                .OnError(() => Index())
+                .OnSuccess(() => RedirectToAction("About"))
                 .Returning<HomeResponseModel>()
-                .On(x => x.GotoAbout, _ => RedirectToAction("About"))
-                .OnSuccess(_ => RedirectToAction("Index"))
-                .OnError(_ => Index());
+                ;
         }
+
+
 
         public ActionResult About()
         {
