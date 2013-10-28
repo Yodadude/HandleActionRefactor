@@ -30,6 +30,7 @@ namespace HandleActionRefactor.Controllers
         [HttpPost]
         public ActionResult Index(HomeInputModel inputModel)
         {
+
             return Handle(inputModel)
                 .Returning<HomeResponseModel>()
                 .On(x => x.GotoAbout, _ => RedirectToAction("About"))

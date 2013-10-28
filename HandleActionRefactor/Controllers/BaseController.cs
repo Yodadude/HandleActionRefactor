@@ -33,7 +33,7 @@ namespace HandleActionRefactor.Controllers
 
         public override void ExecuteResult(ControllerContext context)
         {
-
+            ExecuteResult(context);
         }
     }
 
@@ -76,19 +76,26 @@ namespace HandleActionRefactor.Controllers
         {
             _response = _invoker.Execute<TRet>(_model);
 
-            if (_error != null)
-                _error(_model);
-            else if (_actions.Count > 0)
+            if (!context.Controller.ViewData.ModelState.IsValid)
             {
-                foreach (var onPredicate in _actions)
-                {
-                    if (onPredicate.Func1(_response))
-                        onPredicate.Func2(_model).ExecuteResult(context);
-                }
-
+                if (_error != null)
+                    _error(_model).ExecuteResult(context);
             }
-            else if (_success != null)
-            _success(_model).ExecuteResult(context);
+            else
+            {
+                if (_success != null)
+                    _success(_model).ExecuteResult(context);
+
+                if (_actions.Count > 0)
+                {
+                    foreach (var onPredicate in _actions)
+                    {
+                        if (onPredicate.Func1(_response))
+                            onPredicate.Func2(_model).ExecuteResult(context);
+                    }
+                }
+            }
+
         }
 
         private class OnPredicate
