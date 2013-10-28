@@ -45,7 +45,7 @@ namespace HandleActionRefactor.Controllers
         private IInvoker _invoker;
         private Func<T, ActionResult> _success;
         private Func<T, ActionResult> _error;
-        private readonly List<OnPredicate> _actions; 
+        private readonly List<OnPredicate> _actions;
 
         public HandleActionResult(T model, IInvoker invoker)
         {
@@ -66,7 +66,7 @@ namespace HandleActionRefactor.Controllers
             return this;
         }
 
-        public HandleActionResult<T, TRet> On(Func<TRet, bool> f1, Func<T, ActionResult> f2)
+        public HandleActionResult<T, TRet> On(Func<TRet, bool> f1, Func<TRet, ActionResult> f2)
         {
             _actions.Add(new OnPredicate { Func1 = f1, Func2 = f2 });
             return this;
@@ -86,13 +86,10 @@ namespace HandleActionRefactor.Controllers
                 if (_success != null)
                     _success(_model).ExecuteResult(context);
 
-                if (_actions.Count > 0)
+                foreach (var onPredicate in _actions)
                 {
-                    foreach (var onPredicate in _actions)
-                    {
-                        if (onPredicate.Func1(_response))
-                            onPredicate.Func2(_model).ExecuteResult(context);
-                    }
+                    if (onPredicate.Func1(_response))
+                        onPredicate.Func2(_response).ExecuteResult(context);
                 }
             }
 
@@ -101,7 +98,7 @@ namespace HandleActionRefactor.Controllers
         private class OnPredicate
         {
             public Func<TRet, bool> Func1;
-            public Func<T, ActionResult> Func2;
+            public Func<TRet, ActionResult> Func2;
         }
     }
 
