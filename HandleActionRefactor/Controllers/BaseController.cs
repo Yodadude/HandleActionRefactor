@@ -23,6 +23,7 @@ namespace HandleActionRefactor.Controllers
         private readonly T _model;
         private Func<ActionResult> _error;
         private Func<ActionResult> _success;
+
         private readonly IInvoker _invoker;
 
         public HandleActionResultBuilder(T model, IInvoker invoker)
@@ -72,7 +73,9 @@ namespace HandleActionRefactor.Controllers
                 else
                 {
                     if (_builder._success != null)
-                        _builder._success().ExecuteResult(context);
+                    {
+                        _builder._success(context).ExecuteResult(context);
+                    }
                 }
             }
         }
@@ -83,16 +86,17 @@ namespace HandleActionRefactor.Controllers
         private TRet _response { get; set; }
         protected readonly T _model;
         private IInvoker _invoker;
-        private Func<T, ActionResult> _success;
+        private Func<TRet, ControllerContext, ActionResult> _success;
         private Func<ActionResult> _error;
         private readonly List<OnPredicate> _actions;
 
         public HandleActionResultBuilder(T model, IInvoker invoker, Func<ActionResult> success, Func<ActionResult> error)
         {
+
             _model = model;
             _invoker = invoker;
             _error = error;
-            _success = _ => success();
+            _success = (a,b) => success();
             _actions = new List<OnPredicate>();
         }
 
@@ -102,7 +106,13 @@ namespace HandleActionRefactor.Controllers
             return this;
         }
 
-        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<T, ActionResult> func)
+        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ActionResult> func)
+        {
+            _success = (a,b) => func(a);
+            return this;
+        }
+
+        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ControllerContext, ActionResult> func)
         {
             _success = func;
             return this;
@@ -154,7 +164,9 @@ namespace HandleActionRefactor.Controllers
                     }
 
                     if (_builder._success != null)
-                        _builder._success(_builder._model).ExecuteResult(context);
+                    {
+                        _builder._success(_builder._response,context).ExecuteResult(context);
+                    }
                 }
 
             }
@@ -167,6 +179,17 @@ namespace HandleActionRefactor.Controllers
         }
     }
 
+    public static class Extensions
+    {
+        public static HandleActionResultBuilder<T, TRet> OnSuccessWithMessage<T, TRet>(this HandleActionResultBuilder<T, TRet> builder, 
+            Func<TRet, ActionResult> action, string message)
+        {
 
-
+            builder.OnSuccess((a,b) => { 
+                b.Controller.TempData.Add("message", message);
+                return action(a);
+            });
+            return null;
+        }
+    }
 }

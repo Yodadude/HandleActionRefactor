@@ -2,6 +2,13 @@
     ViewBag.Title = "About Us";
 }
 
+@{
+    if (TempData["message"] != null)
+    {
+        <text>Message:</text>
+        @TempData["message"];
+    };
+}
 <h2>About</h2>
 <p>
      Put content here.

@@ -59,17 +59,13 @@ namespace HandleActionRefactor.Controllers
         [HttpPost]
         public ActionResult Index(HomeInputModel inputModel)
         {
-            //if (!ModelState.IsValid)
-            //    return Index();
-
-            //var response = Invoker.Execute<HomeResponseModel>(inputModel);
-
-            //return RedirectToAction("ABout");
 
             return Handle(inputModel)
                 .OnError(() => Index())
-                .OnSuccess(() => RedirectToAction("About"))
                 .Returning<HomeResponseModel>()
+                .OnSuccessWithMessage(x => RedirectToAction("About"), "Tigers 2014")
+                //.OnSuccess(() => RedirectToAction("Index"))
+                
                 ;
         }
 
