@@ -22,7 +22,7 @@ namespace HandleActionRefactor.Controllers
     {
         private readonly T _model;
         private Func<ActionResult> _error;
-        private Func<ActionResult> _success;
+        private Func<ControllerContext, ActionResult> _success;
 
         private readonly IInvoker _invoker;
 
@@ -37,15 +37,21 @@ namespace HandleActionRefactor.Controllers
             return new HandleActionResultBuilder<T, TRet>(_model, _invoker, _success, _error);
         }
 
-        public HandleActionResultBuilder<T> OnError(Func<ActionResult> func)
+        public HandleActionResultBuilder<T> OnError(Func<ActionResult> errorFunc)
         {
-            _error = func;
+            _error = errorFunc;
             return this;
         }
 
-        public HandleActionResultBuilder<T> OnSuccess(Func<ActionResult> func)
+        public HandleActionResultBuilder<T> OnSuccess(Func<ActionResult> successFunc)
         {
-            _success = func;
+            _success = a => successFunc();
+            return this;
+        }
+
+        public HandleActionResultBuilder<T> OnSuccess(Func<ControllerContext, ActionResult> successFunc)
+        {
+            _success = successFunc;
             return this;
         }
 
@@ -90,13 +96,13 @@ namespace HandleActionRefactor.Controllers
         private Func<ActionResult> _error;
         private readonly List<OnPredicate> _actions;
 
-        public HandleActionResultBuilder(T model, IInvoker invoker, Func<ActionResult> success, Func<ActionResult> error)
+        public HandleActionResultBuilder(T model, IInvoker invoker, Func<ControllerContext, ActionResult> success, Func<ActionResult> error)
         {
 
             _model = model;
             _invoker = invoker;
             _error = error;
-            _success = (a,b) => success();
+            _success = (a,b) => success(b);
             _actions = new List<OnPredicate>();
         }
 
@@ -106,21 +112,21 @@ namespace HandleActionRefactor.Controllers
             return this;
         }
 
-        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ActionResult> func)
+        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ActionResult> successFunc)
         {
-            _success = (a,b) => func(a);
+            _success = (a,b) => successFunc(a);
             return this;
         }
 
-        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ControllerContext, ActionResult> func)
+        public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ControllerContext, ActionResult> successFunc)
         {
-            _success = func;
+            _success = successFunc;
             return this;
         }
 
-        public HandleActionResultBuilder<T, TRet> OnError(Func<ActionResult> func)
+        public HandleActionResultBuilder<T, TRet> OnError(Func<ActionResult> errorFunc)
         {
-            _error = func;
+            _error = errorFunc;
             return this;
         }
 
@@ -168,7 +174,6 @@ namespace HandleActionRefactor.Controllers
                         _builder._success(_builder._response,context).ExecuteResult(context);
                     }
                 }
-
             }
         }
 
@@ -185,11 +190,11 @@ namespace HandleActionRefactor.Controllers
             Func<TRet, ActionResult> action, string message)
         {
 
-            builder.OnSuccess((a,b) => { 
+            return builder.OnSuccess((a,b) => { 
                 b.Controller.TempData.Add("message", message);
                 return action(a);
             });
-            return null;
+
         }
     }
 }
