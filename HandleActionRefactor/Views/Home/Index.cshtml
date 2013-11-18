@@ -23,3 +23,25 @@
         @Html.Submit("Verify")
     }
 </p>
+<button id="ajaxpost">Post Using Ajax</button>
+<script type="text/javascript">
+
+$(function () {
+    $("#ajaxpost").click(postFormUsingAjax);
+});
+
+function postFormUsingAjax() {
+
+    $.post("/",
+        { 
+            Name: document.forms[0].Name.value,
+            Age:  document.forms[0].Age.value
+        },
+        function (data) {
+            alert(data.status);
+        }
+    );
+
+}
+
+</script>

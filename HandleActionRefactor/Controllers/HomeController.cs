@@ -61,7 +61,8 @@ namespace HandleActionRefactor.Controllers
         {
 
             return Handle(inputModel)
-                .OnError(() => Index())
+                //.OnError(() => Index())
+                .OnErrorAjax(() => { return Json( new {status= "error"});}, () => Index())
                 //.OnSuccessWithMessage(() => RedirectToAction("About"), "Tigers 2014")
                 .Returning<HomeResponseModel>()
                 .OnSuccessWithMessage(x => RedirectToAction("About"), "Tigers 2014")

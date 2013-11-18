@@ -9,9 +9,8 @@ namespace HandleActionRefactor.Controllers
     public class HandleActionResultBuilder<T>
     {
         private readonly T _model;
-        private Func<ActionResult> _error;
+        private Func<ControllerContext, ActionResult> _error;
         private Func<ControllerContext, ActionResult> _success;
-
         private readonly IInvoker _invoker;
 
         public HandleActionResultBuilder(T model, IInvoker invoker)
@@ -26,6 +25,12 @@ namespace HandleActionRefactor.Controllers
         }
 
         public HandleActionResultBuilder<T> OnError(Func<ActionResult> errorFunc)
+        {
+            _error = _ => errorFunc();
+            return this;
+        }
+
+        public HandleActionResultBuilder<T> OnError(Func<ControllerContext, ActionResult> errorFunc)
         {
             _error = errorFunc;
             return this;
@@ -62,7 +67,7 @@ namespace HandleActionRefactor.Controllers
                 if (!context.Controller.ViewData.ModelState.IsValid)
                 {
                     if (_builder._error != null)
-                        _builder._error().ExecuteResult(context);
+                        _builder._error(context).ExecuteResult(context);
                 }
                 else
                 {
@@ -81,10 +86,10 @@ namespace HandleActionRefactor.Controllers
         protected readonly T _model;
         private readonly IInvoker _invoker;
         private Func<TRet, ControllerContext, ActionResult> _success;
-        private Func<ActionResult> _error;
+        private Func<ControllerContext, ActionResult> _error;
         private readonly List<OnPredicate> _actions;
 
-        public HandleActionResultBuilder(T model, IInvoker invoker, Func<ControllerContext, ActionResult> success, Func<ActionResult> error)
+        public HandleActionResultBuilder(T model, IInvoker invoker, Func<ControllerContext, ActionResult> success, Func<ControllerContext, ActionResult> error)
         {
 
             _model = model;
@@ -102,7 +107,7 @@ namespace HandleActionRefactor.Controllers
 
         public HandleActionResultBuilder<T, TRet> OnSuccess(Func<TRet, ActionResult> successFunc)
         {
-            _success = (a, b) => successFunc(a);
+            _success = (response, context) => successFunc(response);
             return this;
         }
 
@@ -113,6 +118,12 @@ namespace HandleActionRefactor.Controllers
         }
 
         public HandleActionResultBuilder<T, TRet> OnError(Func<ActionResult> errorFunc)
+        {
+            _error = _ => errorFunc();
+            return this;
+        }
+
+        public HandleActionResultBuilder<T, TRet> OnError(Func<ControllerContext, ActionResult> errorFunc)
         {
             _error = errorFunc;
             return this;
@@ -141,11 +152,11 @@ namespace HandleActionRefactor.Controllers
             public override void ExecuteResult(ControllerContext context)
             {
                 _builder._response = _builder._invoker.Execute<TRet>(_builder._model);
-
+                
                 if (!context.Controller.ViewData.ModelState.IsValid)
                 {
-                    if (_builder._error != null)
-                        _builder._error().ExecuteResult(context);
+                   if (_builder._error != null)
+                        _builder._error(context).ExecuteResult(context);
                 }
                 else
                 {

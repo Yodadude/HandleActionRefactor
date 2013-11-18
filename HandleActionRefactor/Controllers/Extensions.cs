@@ -28,5 +28,22 @@ namespace HandleActionRefactor.Controllers
             });
 
         }
+
+
+        public static HandleActionResultBuilder<T> OnErrorAjax<T>(this HandleActionResultBuilder<T> builder,
+                                                                   Func<ActionResult> ajaxAction, Func<ActionResult> action)
+        {
+
+            return builder.OnError(context =>
+            {
+                if (context.HttpContext.Request.IsAjaxRequest() && action != null)
+                {
+                    return builder.OnError(ajaxAction);
+                }
+
+                return builder.OnError(action);
+            });
+
+        }
     }
 }
