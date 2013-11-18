@@ -122,6 +122,8 @@
     <Compile Include="App_Start\StructuremapMvc.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\Extensions.cs" />
+    <Compile Include="Controllers\HandleActionResultBuilder.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\HomeInputHandler.cs" />
     <Compile Include="Controllers\HomeInputModel.cs" />
